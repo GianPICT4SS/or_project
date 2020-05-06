@@ -2,10 +2,13 @@ import json
 import logging
 import numpy as np
 from simulator.instance import Instance
-from solver.simpleKnapsack import SimpleKnapsack
+from solver.simpleKnapsack import SimpleAntennaActivation
 from heuristic.simpleHeu import SimpleHeu
+import networkx as net
 
 np.random.seed(0)
+
+
 
 if __name__ == '__main__':
     log_name = "./logs/main.log"
@@ -16,17 +19,29 @@ if __name__ == '__main__':
         filemode='w'
     )
 
-    fp = open("./etc/config.json", 'r')
-    sim_setting = json.load(fp)
-    fp.close()
+    with open("./etc/config.json", 'r') as f:
+        sim_setting = json.loads(f.read())
+
 
     inst = Instance(
         sim_setting
     )
     dict_data = inst.get_data()
 
-    prb = SimpleKnapsack()
-    of_exact, sol_exact, comp_time_exact = prb.solve(
+    G = net.Graph(name='SimpleAntenna')
+
+    ls = np.arange(dict_data['n_items'])
+    for i in ls:
+        edge = (i, i + 1)
+        G.add_edge(*edge)
+
+    a, b = zip(*G.edges)
+    dict_data['A'] = [x for x in a]
+    dict_data['B'] = [x for x in b]
+    dict_data['B'][14] = 1
+
+    prb = SimpleAntennaActivation()
+    of_exact, sol_exact, comp_time_exact, x = prb.solve(
         dict_data,
         verbose=True
     )
@@ -51,3 +66,11 @@ if __name__ == '__main__':
         "exact", of_exact, sol_exact, comp_time_exact
     ))
     file_output.close()
+
+
+
+
+
+
+
+
