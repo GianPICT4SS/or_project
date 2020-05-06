@@ -1,8 +1,8 @@
 {
 	"knapsack_size": 50,
-	"low_size": 1,
-	"high_size": 10,
-	"n_items": 10,
-	"low_profit": 5,
+	"low_size": 0,
+	"high_size": 15,
+	"n_items": 15,
+	"low_profit": 1,
 	"high_profit": 10
 }
