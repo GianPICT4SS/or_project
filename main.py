@@ -38,10 +38,12 @@ if __name__ == '__main__':
     a, b = zip(*G.edges)
     dict_data['A'] = [x for x in a]
     dict_data['B'] = [x for x in b]
-    dict_data['B'][14] = 1
+    dict_data['B'][dict_data['n_items']-1] = 1
+
+
 
     prb = SimpleAntennaActivation()
-    of_exact, sol_exact, comp_time_exact, x = prb.solve(
+    of_exact, sol_exact, comp_time_exact, x, prob = prb.solve(
         dict_data,
         verbose=True
     )
