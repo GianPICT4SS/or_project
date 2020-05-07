@@ -26,23 +26,39 @@ class SimpleAntennaActivation():
         Returns:
             [type] -- [description]
         """
-        logging.info("######### SimpleKnapsack ###########")
+        logging.info("######### Simple Antenna Activation ###########")
         items = range(dict_data['n_items'])
-        items = {0: (0, 1), 1: (0, 1), 2: (0, 1), 3: (0, 1), 4: (0, 1), 5: (0,1), 6: (0,1), 7: (0,1),
-                 8: (0,1), 9: (0, 1), 10: (0,1), 11: (0,1), 12: (0,1), 13: (0, 1), 14: (0,1)}
+        #pro = [0, 10, 20, 13]
+
+
         x = LpVariable.dicts(
             "X", items,
             lowBound=0,
+            upBound=1,
             cat=LpInteger
         )
+
         # LpContinuous
         print(x.items())
         problem_name = "Antenna_Activation"
 
         prob = LpProblem(problem_name, LpMaximize)
         prob += lpSum([dict_data['profits'][i] * x[i] for i in items]), "obj_func"
+        #prob += lpSum([pro[i] * x[i] for i in items]), "obj_func"
         #prob += lpSum([dict_data['sizes'][i] * x[i] for i in items]) <= dict_data['max_size'], "max_vol"
-        prob += lpSum(x[i] + x[j] for i, j in zip(*(dict_data['A'], dict_data['B']))) <= 1
+        for i in range(len(dict_data['A'])):
+            """Do not sum all constraints: splits constraints"""
+            #prob += lpSum(x[i] + x[j] for i, j in zip(*(dict_data['A'], dict_data['B']))) <= 1, "max_vol"
+            k = dict_data['A'][i]
+            j = dict_data['B'][i]
+            prob += lpSum(x[k]+x[j]) <= 1, f"conflict_{i}"
+
+        print(f'profits: {dict_data["profits"]}')
+        #print(f'profits: {pro}')
+        a = [x[i]+x[j] for i, j in zip(*(dict_data['A'], dict_data['B']))]
+        print(f'constraints: {a}')
+        for c, d in zip(*(dict_data['A'], dict_data['B'])):
+            print(f'conflicts: {c, d}')
 
         prob.writeLP("./logs/{}.lp".format(problem_name))
 
@@ -72,4 +88,5 @@ class SimpleAntennaActivation():
             of, sol_x, comp_time)
         )
         logging.info("#########")
-        return of, sol_x, comp_time, x
+        return of, sol_x, comp_time, x, prob
+

@@ -2,7 +2,7 @@
 	"knapsack_size": 50,
 	"low_size": 0,
 	"high_size": 15,
-	"n_items": 15,
+	"n_items": 40,
 	"low_profit": 1,
 	"high_profit": 10
 }
