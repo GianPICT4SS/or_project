@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import SimpleAntennaActivation
-from heuristic.simpleHeu import SimpleHeu
+#from heuristic.simpleHeu import SimpleHeu
 import networkx as net
 
 np.random.seed(0)
@@ -19,7 +19,7 @@ class ConflictGraph():
 
     def simple_conflict_graph(self, conflict=10):
         """build a simple conflict graph: without particular assumptions, a conflict graph is built,
-        with a fixed number of conflict and using as antennas two"""
+        with a fixed number of conflicts"""
 
         while len(list(self.Graph.edges)) < conflict:
 
@@ -61,34 +61,27 @@ if __name__ == '__main__':
     dict_data = inst.get_data()
 
     graph = ConflictGraph(dict_data, p=0.8)
-    graph.simple_conflict_graph(conflict=graph.dict_data['n_items'])
+    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']*0.7))
 
     prb = SimpleAntennaActivation()
     of_exact, sol_exact, comp_time_exact, x, prob = prb.solve(
         graph.dict_data,
         verbose=True
     )
-    print(of_exact, sol_exact, comp_time_exact)
+    print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
 
-    heu = SimpleHeu(2)
-    of_heu, sol_heu, comp_time_heu = heu.solve(
-        dict_data
-    )
-    print(of_heu, sol_heu, comp_time_heu)
+    #heu = SimpleHeu(2)
+    #of_heu, sol_heu, comp_time_heu = heu.solve(
+    #   dict_data
+    #)
+    #print(of_heu, sol_heu, comp_time_heu)
 
     # printing results of a file
-    file_output = open(
-        "./results/exp_general_table.csv",
-        "w"
-    )
-    file_output.write("method, of, sol, time\n")
-    file_output.write("{}, {}, {}, {}\n".format(
-        "heu", of_heu, sol_heu, comp_time_heu
-    ))
-    file_output.write("{}, {}, {}, {}\n".format(
-        "exact", of_exact, sol_exact, comp_time_exact
-    ))
-    file_output.close()
+    with open("./results/exp_general_table.csv", "w") as f:
+        f.write("method, of, sol, time\n")
+        f.write(f"exact, {of_exact}, {sol_exact}, {comp_time_exact}\n")
+        #f.write(f"heu, {of_heu}, {sol_heu}, {comp_time_heu}")
+
 
 
 
