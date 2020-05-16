@@ -49,14 +49,14 @@ class ConflictGraph():
         logging.info(f' p: {p}')
 
         for i in range(N):
-            for j in range(N):
-                if i != j:
-                    a = np.random.randint(low=0, high=N) / N
-                    #logging.info(f' random a: {a}')
-                    if a <= p:
-                        logging.info(f' random a: {a}')
-                        edge = (i, j)
-                        self.randomGraph.add_edge(*edge)
+            for j in range(N-1):
+                #if i != j:
+                a = np.random.randint(low=0, high=N) / N
+                #logging.info(f' random a: {a}')
+                if a <= p:
+                    logging.info(f' random a: {a}')
+                    edge = (i, j+1)
+                    self.randomGraph.add_edge(*edge)
                     #logging.info(f' Random edges: {self.Graph.edges}')
 
         logging.info(f'Random edges: {self.randomGraph.edges}')
@@ -66,14 +66,15 @@ class ConflictGraph():
         self.dict_data['R_B'] = [x for x in b]
         return self
 
-    def plot_graph(self):
+    def plot_graph(self, flag=False):
 
         plt.subplot(121)
         plt.title('Simple Conflict Graphs')
         net.draw(self.Graph, with_labels=True, font_weight='bold')
-        plt.subplot(122)
-        plt.title('Random Conflict Graphs')
-        net.draw(self.randomGraph, with_labels=True, font_weight='bold')
+        if flag:
+            plt.subplot(122)
+            plt.title('Random Conflict Graphs')
+            net.draw(self.randomGraph, with_labels=True, font_weight='bold')
 
 
 
@@ -100,7 +101,7 @@ if __name__ == '__main__':
     dict_data = inst.get_data()
 
     graph = ConflictGraph(dict_data)  # Graph Initialization
-    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']))  # Simple CG
+    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']*0.7))  # Simple CG
     graph.random_conflict_graph()  # Random CG
 
     prb = AntennaActivation()  # Solver Initialization
