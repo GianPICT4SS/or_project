@@ -42,6 +42,42 @@ class SimpleHeu():
         
         return of, sol_x, comp_time
 
-    def recursive_cg_solve(self, n=0):
+    def recursive_cg_solve(self):
+        """
+        it seems to give absolutely a very good solution.
+        TO DO: it is needed a method to compute the final solution obtaining as a concatenation of the final graph returned
+        by this method and the nodes that are not in the CG.
+        :return:
+        """
 
-        u = (self.graph.dict_data['profits'][n])/self.tot_u
+        nodes_ls = list(self.graph.Graph.nodes)  # Get all nodes in CG
+        u = (self.graph.dict_data['profits'][nodes_ls[self.n]])  # compute the Utility of the first node in the CG
+
+        nodes_conf_n = list(self.graph.Graph[nodes_ls[self.n]])  # get all nodes in conflict with the node n
+        conflicts = len(nodes_conf_n)  # compute with how many nodes n is in conflict
+
+        ut_conf = 0  # initialize the total utility of the nodes in conflict with n
+        # compute the total utility of the nodes in confict with n
+        for c in nodes_conf_n:
+            ut_conf = ut_conf + self.graph.dict_data['profits'][c]
+        #ut_conf = ut_conf/self.tot_u
+
+        if ut_conf > conflicts*u:
+            self.graph.Graph.remove_node(nodes_ls[self.n])  # remove node n from the solution
+            # Recursion
+            self.n = self.n + 1
+            if self.n < len(nodes_ls):  # check if all nodes have been visited
+                return self.recursive_cg_solve()
+            else:
+                return self
+        else:  # do not exclude nodes n
+            # Recursion
+            self.n = self.n + 1
+            if self.n < len(nodes_ls):
+                return self.recursive_cg_solve()
+            else:
+                return self
+
+
+
+

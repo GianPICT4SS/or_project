@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import AntennaActivation
-#from heuristic.simpleHeu import SimpleHeu
+from heuristic.simpleHeu import SimpleHeu
 
 import matplotlib.pyplot as plt
 import networkx as net
@@ -24,7 +24,7 @@ class ConflictGraph():
         """build a simple conflict graph: without particular assumptions, a conflict graph is built,
         with a fixed number of conflicts"""
 
-        while len(list(self.Graph.edges)) < conflict:
+        while len(list(self.Graph.edges)) <= conflict:
 
             i = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
             j = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     dict_data = inst.get_data()
 
     graph = ConflictGraph(dict_data)  # Graph Initialization
-    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']*0.7))  # Simple CG
+    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']))  # Simple CG
     graph.random_conflict_graph()  # Random CG
 
     prb = AntennaActivation()  # Solver Initialization
@@ -136,10 +136,12 @@ if __name__ == '__main__':
     print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
     print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
 
-    #heu = SimpleHeu(2)
+    heu = SimpleHeu(graph=graph, n=0)
     #of_heu, sol_heu, comp_time_heu = heu.solve(
     #   dict_data
     #)
+    sheu = heu.recursive_cg_solve()
+
     #print(of_heu, sol_heu, comp_time_heu)
 
     # printing results of a file
