@@ -18,6 +18,7 @@ class ConflictGraph():
         self.dict_data = dict_data
         self.Graph = net.Graph()
         self.randomGraph = net.Graph()
+        self.info = {}
 
     def simple_conflict_graph(self, conflict=10):
         """build a simple conflict graph: without particular assumptions, a conflict graph is built,
@@ -75,6 +76,20 @@ class ConflictGraph():
             plt.subplot(122)
             plt.title('Random Conflict Graphs')
             net.draw(self.randomGraph, with_labels=True, font_weight='bold')
+
+    def info_graph(self):
+
+        deg = dict(self.Graph.degree())
+        top5 = sorted(deg.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        Rdeg = dict(self.randomGraph.degree())
+        Rtop5 = sorted(Rdeg.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        self.info['top5Degree'] = top5
+        self.info['Rtop5Degree'] = Rtop5
+        self.info['Utilities'] = self.dict_data['profits']
+
+        return self
 
 
 
