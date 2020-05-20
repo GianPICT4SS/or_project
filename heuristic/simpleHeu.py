@@ -5,6 +5,14 @@ import numpy as np
 import logging
 from pulp import *
 
+log_name = "./logs/main.log"
+logging.basicConfig(
+    filename=log_name,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    level=logging.INFO, datefmt="%H:%M:%S",
+    filemode='w'
+)
+
 class SimpleHeu():
     def __init__(self, n, graph):
         """
@@ -15,6 +23,8 @@ class SimpleHeu():
         self.n = n
         self.graph = graph
         self.tot_u = np.linalg.norm(graph.dict_data['profits'])
+        self.init_CGnodes_ls = list(graph.Ograph.nodes)
+        logging.info(f'init_CGnodes: {self.init_CGnodes_ls}')
 
     def solve(
         self, dict_data
@@ -50,11 +60,16 @@ class SimpleHeu():
         :return:
         """
 
-        nodes_ls = list(self.graph.Graph.nodes)  # Get all nodes in CG
-        u = (self.graph.dict_data['profits'][nodes_ls[self.n]])  # compute the Utility of the first node in the CG
 
-        nodes_conf_n = list(self.graph.Graph[nodes_ls[self.n]])  # get all nodes in conflict with the node n
+        logging.info(f'heu_graph nodes: {self.graph.heu_graph.nodes}')
+        #nodes_ls = list(self.graph.Graph.nodes)  # Get all nodes in CG
+        u = (self.graph.dict_data['profits'][self.init_CGnodes_ls[self.n]])  # compute the Utility of the first node in the CG
+        logging.info(f'profits of {self.init_CGnodes_ls[self.n]}: {u}')
+
+        nodes_conf_n = list(self.graph.heu_graph[self.init_CGnodes_ls[self.n]])  # get all nodes in conflict with the node n
+        logging.info(f'nodes conflict: {nodes_conf_n}')
         conflicts = len(nodes_conf_n)  # compute with how many nodes n is in conflict
+        logging.info(f'len conflicts: {conflicts}')
 
         ut_conf = 0  # initialize the total utility of the nodes in conflict with n
         # compute the total utility of the nodes in confict with n
@@ -63,20 +78,32 @@ class SimpleHeu():
         #ut_conf = ut_conf/self.tot_u
 
         if ut_conf > conflicts*u:
-            self.graph.Graph.remove_node(nodes_ls[self.n])  # remove node n from the solution
+            logging.info(f'ut_conf: {ut_conf}; conflicts*u: {conflicts*u}')
+            self.graph.heu_graph.remove_node(self.init_CGnodes_ls[self.n])  # remove node n from the solution
+            logging.info(f'nodes {self.init_CGnodes_ls[self.n]} turn OFF')
             # Recursion
             self.n = self.n + 1
-            if self.n < len(nodes_ls):  # check if all nodes have been visited
+            if self.n < len(self.init_CGnodes_ls):  # check if all nodes have been visited
                 return self.recursive_cg_solve()
             else:
+
                 return self
         else:  # do not exclude nodes n
             # Recursion
+            logging.info(f'nodes {self.init_CGnodes_ls[self.n]} turn ON')
             self.n = self.n + 1
-            if self.n < len(nodes_ls):
+            if self.n < len(self.init_CGnodes_ls):
                 return self.recursive_cg_solve()
             else:
                 return self
+
+    def get_oFunction(self):
+
+        obj_function = 0
+        sol_h = list(self.graph.heu_graph.nodes)
+        for s in sol_h:
+            obj_function += self.graph.dict_data['profits'][s]
+        return obj_function
 
 
 

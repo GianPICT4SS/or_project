@@ -1,3 +1,4 @@
+import time
 import json
 import logging
 import numpy as np
@@ -16,15 +17,16 @@ class ConflictGraph():
 
         self.nodes = np.arange(dict_data['n_items'])
         self.dict_data = dict_data
-        self.Graph = net.Graph()
+        self.Ograph = net.Graph()
         self.randomGraph = net.Graph()
+        self.heu_graph = self.Ograph
         self.info = {}
 
     def simple_conflict_graph(self, conflict=10):
         """build a simple conflict graph: without particular assumptions, a conflict graph is built,
         with a fixed number of conflicts"""
 
-        while len(list(self.Graph.edges)) <= conflict:
+        while len(list(self.Ograph.edges)) < conflict:
 
             i = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
             j = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
@@ -34,11 +36,11 @@ class ConflictGraph():
             # taking a nodes not present in the possible nodes list.
                 edge = (i, j)
                 logging.info(f'Adding edge: {edge}')
-                self.Graph.add_edge(*edge)
-        logging.info(f' edges: {self.Graph.edges}')
+                self.Ograph.add_edge(*edge)
+        logging.info(f' edges: {self.Ograph.edges}')
 
         # Take the conflict edges
-        a, b = zip(*self.Graph.edges)
+        a, b = zip(*self.Ograph.edges)
         self.dict_data['A'] = [x for x in a]
         self.dict_data['B'] = [x for x in b]
         return self
@@ -69,24 +71,35 @@ class ConflictGraph():
 
     def plot_graph(self, flag=False):
 
-        plt.subplot(121)
+        plt.subplot(131)
         plt.title('Simple Conflict Graphs')
-        net.draw(self.Graph, with_labels=True, font_weight='bold')
+        net.draw(self.Ograph, with_labels=True, font_weight='bold')
         if flag:
-            plt.subplot(122)
+            plt.subplot(132)
             plt.title('Random Conflict Graphs')
             net.draw(self.randomGraph, with_labels=True, font_weight='bold')
 
+            plt.subplot(133)
+            plt.title("Heuristic Solution")
+            net.draw(self.heu_graph, with_labels=True, font_weight='bold')
+
+
     def info_graph(self):
 
-        deg = dict(self.Graph.degree())
-        top5 = sorted(deg.items(), key=lambda x: x[1], reverse=True)[:5]
+        # Optimal
+        deg_o = dict(self.Ograph.degree())
+        top5_o = sorted(deg_o.items(), key=lambda x: x[1], reverse=True)[:5]
 
-        Rdeg = dict(self.randomGraph.degree())
-        Rtop5 = sorted(Rdeg.items(), key=lambda x: x[1], reverse=True)[:5]
+        # Random
+        deg_r = dict(self.randomGraph.degree())
+        top5_R = sorted(deg_r.items(), key=lambda x: x[1], reverse=True)[:5]
 
-        self.info['top5Degree'] = top5
-        self.info['Rtop5Degree'] = Rtop5
+        deg_h = dict(self.heu_graph.degree())
+        top5_h = sorted(deg_h.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        self.info['top5Degree_O'] = top5_o
+        self.info['top5Degree_R'] = top5_R
+        self.info['top4Degree_H'] = top5_h
         self.info['Utilities'] = self.dict_data['profits']
 
         return self
@@ -140,10 +153,13 @@ if __name__ == '__main__':
     #of_heu, sol_heu, comp_time_heu = heu.solve(
     #   dict_data
     #)
+    start = time.time()
     sheu = heu.recursive_cg_solve()
-
+    end = time.time()
+    ob_heu = sheu.get_oFunction()
+    print(f'Heuristic time: {end-start} \n', f'sol_heu: {ob_heu}')
     #print(of_heu, sol_heu, comp_time_heu)
-
+    graph.info_graph()
     # printing results of a file
     with open("./results/exp_general_table.csv", "w") as f:
         f.write("method, of, sol, time\n")
