@@ -19,7 +19,7 @@ class ConflictGraph():
         self.dict_data = dict_data
         self.Ograph = net.Graph()
         self.randomGraph = net.Graph()
-        self.heu_graph = self.Ograph
+        self.heu_graph = self.randomGraph
         self.info = {}
 
     def simple_conflict_graph(self, conflict=10):
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     dict_data = inst.get_data()
 
     graph = ConflictGraph(dict_data)  # Graph Initialization
-    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']))  # Simple CG
+    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items'])*0.7)  # Simple CG
     graph.random_conflict_graph()  # Random CG
 
     prb = AntennaActivation()  # Solver Initialization

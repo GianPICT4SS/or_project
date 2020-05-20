@@ -23,7 +23,8 @@ class SimpleHeu():
         self.n = n
         self.graph = graph
         self.tot_u = np.linalg.norm(graph.dict_data['profits'])
-        self.init_CGnodes_ls = list(graph.Ograph.nodes)
+        #self.init_CGnodes_ls = list(graph.randomGraph.nodes)
+        self.init_CGnodes_ls = np.unique(graph.dict_data['R_A'] + graph.dict_data['R_B'])
         logging.info(f'init_CGnodes: {self.init_CGnodes_ls}')
 
     def solve(
@@ -52,7 +53,7 @@ class SimpleHeu():
         
         return of, sol_x, comp_time
 
-    def recursive_cg_solve(self):
+    def recursive_cg_solve(self, mu=1):
         """
         it seems to give absolutely a very good solution.
         TO DO: it is needed a method to compute the final solution obtaining as a concatenation of the final graph returned
@@ -68,6 +69,7 @@ class SimpleHeu():
 
         nodes_conf_n = list(self.graph.heu_graph[self.init_CGnodes_ls[self.n]])  # get all nodes in conflict with the node n
         logging.info(f'nodes conflict: {nodes_conf_n}')
+        logging.info(f"utilities conflict nodes: {self.graph.dict_data['profits'][nodes_conf_n]}")
         conflicts = len(nodes_conf_n)  # compute with how many nodes n is in conflict
         logging.info(f'len conflicts: {conflicts}')
 
@@ -77,8 +79,8 @@ class SimpleHeu():
             ut_conf = ut_conf + self.graph.dict_data['profits'][c]
         #ut_conf = ut_conf/self.tot_u
 
-        if ut_conf > conflicts*u:
-            logging.info(f'ut_conf: {ut_conf}; conflicts*u: {conflicts*u}')
+        if ut_conf > u*conflicts*mu:
+            logging.info(f'ut_conf: {ut_conf}; conflicts*u*mu: {conflicts*u*mu}')
             self.graph.heu_graph.remove_node(self.init_CGnodes_ls[self.n])  # remove node n from the solution
             logging.info(f'nodes {self.init_CGnodes_ls[self.n]} turn OFF')
             # Recursion
@@ -86,7 +88,7 @@ class SimpleHeu():
             if self.n < len(self.init_CGnodes_ls):  # check if all nodes have been visited
                 return self.recursive_cg_solve()
             else:
-
+                self.graph.dict_data['Heu_sol'] = np.sort(list(self.graph.heu_graph.nodes))
                 return self
         else:  # do not exclude nodes n
             # Recursion
@@ -95,6 +97,7 @@ class SimpleHeu():
             if self.n < len(self.init_CGnodes_ls):
                 return self.recursive_cg_solve()
             else:
+                self.graph.dict_data['Heu_sol'] = np.sort(list(self.graph.heu_graph.nodes))
                 return self
 
     def get_oFunction(self):
