@@ -5,9 +5,7 @@ import numpy as np
 import logging
 from pulp import *
 
-from queue import Queue
 
-Q = Queue()
 
 log_name = "./logs/main.log"
 logging.basicConfig(
@@ -27,7 +25,7 @@ class SimpleHeu():
         self.n = n
         self.graph = graph
         self.dict_data = dict_data
-        self.nodes_deleted = Queue()
+        self.nodes_deleted = []
         self.tot_u = np.linalg.norm(dict_data['profits'])
         self.init_CGnodes_ls = list(graph.nodes)
         #self.init_CGnodes_ls = np.unique(graph.dict_data['R_A'] + graph.dict_data['R_B'])
@@ -36,9 +34,12 @@ class SimpleHeu():
 
     def recursive_cg_solve(self, mu=1):
         """
-        it seems to give absolutely a very good solution.
-        TO DO: it is needed a method to compute the final solution obtaining as a concatenation of the final graph returned
-        by this method and the nodes that are not in the CG.
+        An heuristic algorithm for solving:
+        max. sum_i[(a_i)*x_i)]
+        s.t  x_i + x_j <= 1 if (i,j) in CF, where CF is the Conflict Graph for the problem.
+
+
+
         :return:
         """
 
@@ -49,6 +50,7 @@ class SimpleHeu():
         logging.info(f'profits of {self.init_CGnodes_ls[self.n]}: {u}')
 
         try:
+            # if self.init_CGnodes_ls[self.n] is present in CG take its conflict nodes
             nodes_conf_n = list(self.graph[self.init_CGnodes_ls[self.n]])  # get all nodes in conflict with the node n
             logging.info(f'nodes conflict: {nodes_conf_n}')
             logging.info(f"utilities conflict nodes: {self.dict_data['profits'][nodes_conf_n]}")
@@ -61,57 +63,61 @@ class SimpleHeu():
             else:
                 return self
 
-        #nodes_conf_n_utilities = self.dict_data['profits'][nodes_conf_n]
+
 
         ut_conf = 0  # initialize the total utility of the nodes in conflict with n
+
         # compute the total utility of the nodes in confict with n
         for c in nodes_conf_n:
             ut_conf = ut_conf + self.dict_data['profits'][c]
-        #ut_conf = ut_conf/self.tot_u
+
 
         if ut_conf > u*conflicts*mu:
+            # remove node n from the final solution
             logging.info(f'ut_conf: {ut_conf}; conflicts*u*mu: {conflicts*u*mu}')
             self.graph.remove_node(self.init_CGnodes_ls[self.n])  # remove node n from the solution
-            self.nodes_deleted.put(self.init_CGnodes_ls[self.n])
+            self.nodes_deleted.append([self.init_CGnodes_ls[self.n]])
             logging.info(f'nodes {self.init_CGnodes_ls[self.n]} turn OFF')
             # Recursion
             self.n = self.n + 1
             if self.n < len(self.init_CGnodes_ls):  # check if all nodes have been visited
                 return self.recursive_cg_solve()
             else:
-                self.dict_data['Heu_sol'] = np.sort(list(self.graph.nodes))
                 return self
-        else:  # do not exclude nodes n but others
+        else:  # do not exclude nodes n, so delete other
 
             self.graph.remove_nodes_from(nodes_conf_n)
-            self.nodes_deleted.put(nodes_conf_n)
+            self.nodes_deleted.append(nodes_conf_n)
             # Recursion
             logging.info(f'nodes {nodes_conf_n} turn OFF')
             self.n = self.n + 1
             if self.n < len(self.init_CGnodes_ls):
                return self.recursive_cg_solve()
             else:
-                self.dict_data['Heu_sol'] = np.sort(list(self.graph.nodes))
-                return self
+               return self
 
-    def get_oFunction(self):
 
-        obj_function = 0
-        sol_h = list(self.graph.nodes)
-        for s in sol_h:
-            obj_function += self.dict_data['profits'][s]
-        return obj_function
 
-    def join_variables(self):
+
+
+    def get_oF_sol(self):
+        """
+        Get obj_function and solution of the problem
+        :return: obj_function, solution
+        """
 
         items = list(range(self.dict_data['n_items']))
-        Q.put(items)
 
-        deleted = Q.get(self.nodes_deleted)
+        deleted = [item for sublist in self.nodes_deleted for item in sublist]
 
-        final_sol = Q.queue
+        solution = [item for item in items if item not in deleted]
 
-        return final_sol
+        obj_function = 0
+        for s in solution:
+            obj_function += self.dict_data['profits'][s]
+        return obj_function, solution
+
+
 
 
 

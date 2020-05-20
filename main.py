@@ -165,8 +165,8 @@ if __name__ == '__main__':
     start = time.time()
     sheu = heu.recursive_cg_solve()
     end = time.time()
-    ob_heu = sheu.get_oFunction()
-    print(f'Heuristic time: {end-start} \n', f'sol_heu: {ob_heu}')
+    of_heu, sol_heu = sheu.get_oF_sol()
+    print(f'Heuristic time: {end-start} \n', f'sol_heu: {sol_heu} \n of_heu: {of_heu}')
 
     #random CG
     r_heu = SimpleHeu(graph=graph.heu_graph_r, dict_data=dict_data, n=0)
@@ -174,8 +174,8 @@ if __name__ == '__main__':
     logging.info('*******Random Heuristic Start*********')
     r_s_heu = r_heu.recursive_cg_solve()
     end = time.time()
-    ob_heu_r = r_s_heu.get_oFunction()
-    print(f'Random Heuristic time: {end - start} \n', f'Random sol_heu: {ob_heu_r}')
+    of_heu_r, sol_heu_r = r_s_heu.get_oF_sol()
+    print(f'Random Heuristic time: {end - start} \n', f'R_sol_heu: {sol_heu_r} \n R_of_heu: {of_heu_r}')
 
 
     #print(of_heu, sol_heu, comp_time_heu)
