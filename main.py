@@ -4,6 +4,7 @@ import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import AntennaActivation
 #from heuristic.simpleHeu import SimpleHeu
+from heuristic.WGHeu import WGHeu
 
 import matplotlib.pyplot as plt
 import networkx as net
@@ -112,6 +113,10 @@ if __name__ == '__main__':
         verbose=True
     )
 
+    #WH Heuristic
+    wgheu = WGHeu()
+    of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.Graph, dict_data["profits"]);
+
     # Random CG problem
     of_exactR, sol_exactR, comp_time_exactR, xR, probR = prb.solve(
         graph.dict_data,
@@ -129,10 +134,10 @@ if __name__ == '__main__':
 
     # printing results of a file
     with open("./results/exp_general_table.csv", "w") as f:
-        f.write("method, of, sol, time\n")
-        f.write(f"exact, {of_exact}, {sol_exact}, {comp_time_exact}\n")
-        f.write(f"exact Random, {of_exactR}, {sol_exactR}, {comp_time_exactR}\n")
-        #f.write(f"heu, {of_heu}, {sol_heu}, {comp_time_heu}")
+        f.write("method; of; time ; sol;\n")
+        f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
+        f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
+        f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}")
 
 
 
