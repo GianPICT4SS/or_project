@@ -1,10 +1,10 @@
-import time
 import json
 import logging
 import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import AntennaActivation
-from heuristic.simpleHeu import SimpleHeu
+#from heuristic.simpleHeu import SimpleHeu
+from heuristic.WGHeu import WGHeu
 
 import matplotlib.pyplot as plt
 import networkx as net
@@ -17,17 +17,14 @@ class ConflictGraph():
 
         self.nodes = np.arange(dict_data['n_items'])
         self.dict_data = dict_data
-        self.Ograph = net.Graph()
+        self.Graph = net.Graph()
         self.randomGraph = net.Graph()
-        self.heu_graph = net.Graph()
-        self.heu_graph_r = net.Graph()
-        self.info = {}
 
     def simple_conflict_graph(self, conflict=10):
         """build a simple conflict graph: without particular assumptions, a conflict graph is built,
         with a fixed number of conflicts"""
 
-        while len(list(self.Ograph.edges)) < conflict:
+        while len(list(self.Graph.edges)) < conflict:
 
             i = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
             j = np.random.randint(low=np.min(self.nodes), high=np.max(self.nodes)+1)
@@ -37,12 +34,11 @@ class ConflictGraph():
             # taking a nodes not present in the possible nodes list.
                 edge = (i, j)
                 logging.info(f'Adding edge: {edge}')
-                self.Ograph.add_edge(*edge)
-                self.heu_graph.add_edge(*edge)
-        logging.info(f' edges: {self.Ograph.edges}')
+                self.Graph.add_edge(*edge)
+        logging.info(f' edges: {self.Graph.edges}')
 
         # Take the conflict edges
-        a, b = zip(*self.Ograph.edges)
+        a, b = zip(*self.Graph.edges)
         self.dict_data['A'] = [x for x in a]
         self.dict_data['B'] = [x for x in b]
         return self
@@ -54,16 +50,15 @@ class ConflictGraph():
         logging.info(f' p: {p}')
 
         for i in range(N):
-            for j in range(N):
-                if i != j:
-                    a = np.random.randint(low=0, high=N) / N
-                    #logging.info(f' random a: {a}')
-                    if a <= p:
-                        logging.info(f' random a: {a}')
-                        edge = (i, j)
-                        self.randomGraph.add_edge(*edge)
-                        self.heu_graph_r.add_edge(*edge)
-                        #logging.info(f' Random edges: {self.Graph.edges}')
+            for j in range(N-1):
+                #if i != j:
+                a = np.random.randint(low=0, high=N) / N
+                #logging.info(f' random a: {a}')
+                if a <= p:
+                    logging.info(f' random a: {a}')
+                    edge = (i, j+1)
+                    self.randomGraph.add_edge(*edge)
+                    #logging.info(f' Random edges: {self.Graph.edges}')
 
         logging.info(f'Random edges: {self.randomGraph.edges}')
         # Take the conflict edges
@@ -74,42 +69,13 @@ class ConflictGraph():
 
     def plot_graph(self, flag=False):
 
-        plt.subplot(131)
+        plt.subplot(121)
         plt.title('Simple Conflict Graphs')
-        net.draw(self.Ograph, with_labels=True, font_weight='bold')
+        net.draw(self.Graph, with_labels=True, font_weight='bold')
         if flag:
-            plt.subplot(132)
+            plt.subplot(122)
             plt.title('Random Conflict Graphs')
             net.draw(self.randomGraph, with_labels=True, font_weight='bold')
-
-            plt.subplot(133)
-            plt.title("Heuristic Solution")
-            net.draw(self.heu_graph, with_labels=True, font_weight='bold')
-
-
-    def info_graph(self):
-
-        # Optimal
-        deg_o = dict(self.Ograph.degree())
-        top5_o = sorted(deg_o.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        # Random
-        deg_r = dict(self.randomGraph.degree())
-        top5_R = sorted(deg_r.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        deg_h = dict(self.heu_graph.degree())
-        top5_h = sorted(deg_h.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        deg_h_r = dict(self.heu_graph_r.degree())
-        top5_h_r = sorted(deg_h_r.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        self.info['top5Degree_O'] = top5_o
-        self.info['top5Degree_R'] = top5_R
-        self.info['top5Degree_H'] = top5_h
-        self.info['top5Degree_H_R'] = top5_h_r
-        self.info['Utilities'] = self.dict_data['profits']
-
-        return self
 
 
 
@@ -136,7 +102,7 @@ if __name__ == '__main__':
     dict_data = inst.get_data()
 
     graph = ConflictGraph(dict_data)  # Graph Initialization
-    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items'])*0.7)  # Simple CG
+    graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']*0.7))  # Simple CG
     graph.random_conflict_graph()  # Random CG
 
     prb = AntennaActivation()  # Solver Initialization
@@ -147,6 +113,10 @@ if __name__ == '__main__':
         verbose=True
     )
 
+    #WH Heuristic
+    wgheu = WGHeu()
+    of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.Graph, dict_data["profits"]);
+
     # Random CG problem
     of_exactR, sol_exactR, comp_time_exactR, xR, probR = prb.solve(
         graph.dict_data,
@@ -156,34 +126,18 @@ if __name__ == '__main__':
     print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
     print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
 
-    # standard
-    logging.info('*****Standard Heuristic Start********')
-    heu = SimpleHeu(graph=graph.heu_graph, dict_data=graph.dict_data, n=0)
-
-    start = time.time()
-    sheu = heu.recursive_cg_solve()
-    end = time.time()
-    of_heu, sol_heu = sheu.get_oF_sol()
-    print(f'Heuristic time: {end-start} \n', f'sol_heu: {sol_heu} \n of_heu: {of_heu}')
-
-    #random CG
-    r_heu = SimpleHeu(graph=graph.heu_graph_r, dict_data=dict_data, n=0)
-    start = time.time()
-    logging.info('*******Random Heuristic Start*********')
-    r_s_heu = r_heu.recursive_cg_solve()
-    end = time.time()
-    of_heu_r, sol_heu_r = r_s_heu.get_oF_sol()
-    print(f'Random Heuristic time: {end - start} \n', f'R_sol_heu: {sol_heu_r} \n R_of_heu: {of_heu_r}')
-
-
+    #heu = SimpleHeu(2)
+    #of_heu, sol_heu, comp_time_heu = heu.solve(
+    #   dict_data
+    #)
     #print(of_heu, sol_heu, comp_time_heu)
-    graph.info_graph()
+
     # printing results of a file
     with open("./results/exp_general_table.csv", "w") as f:
-        f.write("method, of, sol, time\n")
-        f.write(f"exact, {of_exact}, {sol_exact}, {comp_time_exact}\n")
-       # f.write(f"exact Random, {of_exactR}, {sol_exactR}, {comp_time_exactR}\n")
-        #f.write(f"heu, {of_heu}, {sol_heu}, {comp_time_heu}")
+        f.write("method; of; time ; sol;\n")
+        f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
+        f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
+        f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}")
 
 
 
