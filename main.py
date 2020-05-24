@@ -159,9 +159,7 @@ if __name__ == '__main__':
     # standard
     logging.info('*****Standard Heuristic Start********')
     heu = SimpleHeu(graph=graph.heu_graph, dict_data=graph.dict_data, n=0)
-    #of_heu, sol_heu, comp_time_heu = heu.solve(
-    #   dict_data
-    #)
+
     start = time.time()
     sheu = heu.recursive_cg_solve()
     end = time.time()
@@ -184,7 +182,7 @@ if __name__ == '__main__':
     with open("./results/exp_general_table.csv", "w") as f:
         f.write("method, of, sol, time\n")
         f.write(f"exact, {of_exact}, {sol_exact}, {comp_time_exact}\n")
-        f.write(f"exact Random, {of_exactR}, {sol_exactR}, {comp_time_exactR}\n")
+       # f.write(f"exact Random, {of_exactR}, {sol_exactR}, {comp_time_exactR}\n")
         #f.write(f"heu, {of_heu}, {sol_heu}, {comp_time_heu}")
 
 
