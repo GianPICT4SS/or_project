@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-import math
-import logging
-from pulp import *
 import networkx as nx
 import numpy as np
 #paper --> http://www.ru.is/~mmh/papers/WIS_WG.pdf

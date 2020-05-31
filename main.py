@@ -1,9 +1,10 @@
 import json
+import time
 import logging
 import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import AntennaActivation
-#from heuristic.simpleHeu import SimpleHeu
+from heuristic.simpleHeu import SimpleHeu
 from heuristic.WGHeu import WGHeu
 
 import matplotlib.pyplot as plt
@@ -126,18 +127,32 @@ if __name__ == '__main__':
     print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
     print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
 
-    #heu = SimpleHeu(2)
-    #of_heu, sol_heu, comp_time_heu = heu.solve(
-    #   dict_data
-    #)
-    #print(of_heu, sol_heu, comp_time_heu)
+    #recursive heuristic
+    rec_heu = SimpleHeu(n=0, graph=graph.Graph, dict_data=graph.dict_data)
+    rec_heu_random = SimpleHeu(n=0, graph=graph.randomGraph, dict_data=graph.dict_data)
+
+    start = time.time()
+    rec_heu.recursive_cg_solve()
+    elapsed = time.time() - start
+    rec_heu.get_oF_sol()
+    print(f'Recursive Heuristic: solution={rec_heu.solution}, obj_func={rec_heu.obj_func} '
+          f'\n computational time = {elapsed}')
+
+    start = time.time()
+    rec_heu_random.recursive_cg_solve()
+    elapsed_random = time.time() - start
+    rec_heu_random.get_oF_sol()
+    print(f'Random Recursive Heuristic: solution={rec_heu_random.solution}, obj_func={rec_heu_random.obj_func} '
+          f'\n computational time = {elapsed}')
 
     # printing results of a file
     with open("./results/exp_general_table.csv", "w") as f:
         f.write("method; of; time ; sol;\n")
         f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
         f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
-        f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}")
+        f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
+        f.write(f"recu_heu: {rec_heu.obj_func}; {elapsed}: {rec_heu.solution}\n")
+        f.write(f"Rrecu_heu: {rec_heu_random.obj_func}; {elapsed_random}: {rec_heu_random.solution}")
 
 
 

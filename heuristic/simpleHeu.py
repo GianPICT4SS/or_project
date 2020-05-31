@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-import time
-import math
+
 import numpy as np
 import logging
-from pulp import *
+
 
 
 
@@ -25,6 +24,8 @@ class SimpleHeu():
         self.n = n
         self.graph = graph
         self.dict_data = dict_data
+        self.obj_func = []
+        self.solution = []
         self.nodes_deleted = []
         self.tot_u = np.linalg.norm(dict_data['profits'])
         self.init_CGnodes_ls = list(graph.nodes)
@@ -115,7 +116,9 @@ class SimpleHeu():
         obj_function = 0
         for s in solution:
             obj_function += self.dict_data['profits'][s]
-        return obj_function, solution
+        self.obj_func = obj_function
+        self.solution = solution
+        return self
 
 
 
