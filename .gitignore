@@ -49,3 +49,4 @@ nodeLanguageServer.*/**
 logs/
 /results/plots
 /logs/main.log
+logs/main.log
