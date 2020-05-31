@@ -46,4 +46,4 @@ nodeLanguageServer/**
 nodeLanguageServer.*/**
 .vscode/
 logs/
-results/plots
+/results/plots
