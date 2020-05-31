@@ -47,3 +47,4 @@ nodeLanguageServer.*/**
 .vscode/
 logs/
 /results/plots
+/logs/main.log
