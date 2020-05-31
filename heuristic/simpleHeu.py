@@ -2,6 +2,7 @@
 
 import numpy as np
 import logging
+import time
 
 
 
@@ -22,8 +23,8 @@ class SimpleHeu():
         :param graph: ConflictGraph object
         """
         self.n = n
-        self.graph = graph
-        self.dict_data = dict_data
+        self.graph = graph.copy()
+        self.dict_data = dict_data.copy()
         self.obj_func = []
         self.solution = []
         self.nodes_deleted = []
@@ -63,15 +64,10 @@ class SimpleHeu():
                 return self.recursive_cg_solve()
             else:
                 return self
-
-
-
         ut_conf = 0  # initialize the total utility of the nodes in conflict with n
-
         # compute the total utility of the nodes in confict with n
         for c in nodes_conf_n:
             ut_conf = ut_conf + self.dict_data['profits'][c]
-
 
         if ut_conf > u*conflicts*mu:
             # remove node n from the final solution
@@ -97,10 +93,6 @@ class SimpleHeu():
             else:
                return self
 
-
-
-
-
     def get_oF_sol(self):
         """
         Get obj_function and solution of the problem
@@ -119,6 +111,87 @@ class SimpleHeu():
         self.obj_func = obj_function
         self.solution = solution
         return self
+
+class MWIS():
+
+    def __init__(self, graph, dict_data):
+
+        self.graph = graph.copy()
+        self.dict_data = dict_data.copy()
+        self.ob_func = None
+        self.solution = list()
+        self.init_cg = np.sort(list(graph.nodes)).copy()
+        self.weight = list()
+        self.comp_time = None
+
+
+    def mwis_dp(self):
+        """
+        * A Dynamic Programming heuristic algorithm for solving:
+        max. sum_i[(a_i)*x_i)]
+        s.t  x_i + x_j <= 1 if (i,j) in CF, where CF is the Conflict Graph for the problem.
+
+        complexity O(n) where n is the number of nodes in the CG
+
+        :return:
+        """
+
+        logging.info('MWIS DP solver started!')
+        start = time.time()
+        nVertex = len(self.init_cg)
+        logging.info(f'Number of vertex in the initial CG: {nVertex}')
+
+        for i in list(self.init_cg):
+
+            if self.solution.count([i]) != 0:
+                break
+            else:
+                try:
+                    logging.info(f'Tested node: {i}')
+                    conf_nodes = list(self.graph[i])
+                    logging.info(f"conf nodes of {i}: {conf_nodes}")
+                    u_tot = list()
+                    u_tot.append(self.dict_data['profits'][i])
+                    logging.info(f"utility node {i}: {u_tot[0]}")
+                    for j in conf_nodes:
+                        u_tot.append(self.dict_data['profits'][j])
+                    logging.info(f"total utility: {u_tot}")
+                    max_u = np.max(u_tot)
+                    logging.info(f'Max Utility: {max_u}')
+                    # get node with utility equal to max_u
+                    conf_nodes.append(i)
+                    logging.info(f"nodes_path: {conf_nodes}")
+                    opt_node = [x for x in conf_nodes if self.dict_data['profits'][x] == max_u]
+                    delete_nodes = [x for x in conf_nodes if self.dict_data['profits'][x] != max_u]
+                    logging.info(f"optimal node: {opt_node}; deleted_nodes: {delete_nodes}")
+                    self.solution.append(opt_node)
+                    logging.info(f"solution: {self.solution}")
+                    # delete not optimal nodes
+                    self.graph.remove_nodes_from(delete_nodes)
+                except:
+                    pass
+
+        elapsed = time.time() - start
+        self.comp_time = elapsed
+        logging.info(f"=== Optimization done === \n Elapsed time: {elapsed} [ms]")
+
+        hash_list = [s for sublist in self.solution for s in sublist]
+        self.ob_func = np.sum([self.dict_data['profits'][x] for x in set(hash_list)])
+        return self
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
