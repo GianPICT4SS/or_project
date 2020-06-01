@@ -122,7 +122,7 @@ if __name__ == '__main__':
         x = np.arange(1, len(ls) + 1) * 100
         plt.figure()
         plt.plot(x, ls)
-        plt.title(f"comp_time {i}")
+        plt.title(f" computational time {i}")
         plt.xlabel('n_items')
         plt.ylabel('computational time [s]')
         plt.grid()
@@ -133,9 +133,11 @@ if __name__ == '__main__':
     ls_mwis_sol = []
     ls_heu_time = []
     ls_mwis_time = []
+    ls_recu_sol = []
+    ls_recu_time = []
 
 
-    for i in range(20):
+    for i in range(50):
 
         with open("./etc/config.json", 'r') as f:
             sim_setting = json.loads(f.read())
@@ -192,30 +194,36 @@ if __name__ == '__main__':
         mwis_dp.mwis_dp()
 
         # WH Heuristicm
-        wgheu = WGHeu()
-        of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.Graph, dict_data["profits"]);
+        #wgheu = WGHeu()
+        #of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.Graph, dict_data["profits"]);
 
-        ls_heu_sol.append(of_heu/of_exact)
+        #ls_heu_sol.append(of_heu/of_exact)
         ls_mwis_sol.append(mwis_dp.ob_func/of_exact)
+        #ls_recu_sol.append(rec_heu.obj_func/of_exact)
 
-        ls_heu_time.append(comp_time_heu)
+        #ls_heu_time.append(comp_time_heu)
         ls_mwis_time.append(mwis_dp.comp_time)
+        #ls_recu_time.append(elapsed)
         # printing results of a file
         with open("./results/exp_general_table.csv", "w") as f:
             f.write("method; of; time ; sol;\n")
             f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
             #f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
-            f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
+            #f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
             #f.write(f"recu_heu: {rec_heu.obj_func}; {elapsed}: {rec_heu.solution}\n")
             #f.write(f"Rrecu_heu: {rec_heu_random.obj_func}; {elapsed_random}: {rec_heu_random.solution}")
             f.write(f"mwis_dp: {mwis_dp.ob_func}; {mwis_dp.comp_time}; {mwis_dp.solution}")
 
 
-    plot_of(ls_heu_sol,  i='wgheu')
+    #plot_of(ls_heu_sol,  i='wgheu')
     plot_of(ls_mwis_sol,  i='mwis')
 
     plot_compt_time(ls_mwis_time, i='mwis')
-    plot_compt_time(ls_heu_time, i='wgheu')
+    #plot_compt_time(ls_heu_time, i='wgheu')
+
+    #plot_of(ls_recu_sol, i='recursive')
+
+    #plot_compt_time(ls_recu_time, i='recursive')
 
 
 

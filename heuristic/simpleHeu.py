@@ -136,10 +136,10 @@ class MWIS():
         :return:
         """
 
-        logging.info('MWIS DP solver started!')
+        #logging.info('MWIS DP solver started!')
         start = time.time()
-        nVertex = len(self.init_cg)
-        logging.info(f'Number of vertex in the initial CG: {nVertex}')
+        #nVertex = len(self.init_cg)
+        #logging.info(f'Number of vertex in the initial CG: {nVertex}')
 
         for i in list(self.init_cg):
 
@@ -147,33 +147,37 @@ class MWIS():
                 break
             else:
                 try:
-                    logging.info(f'Tested node: {i}')
+                    #logging.info(f'Tested node: {i}')
                     conf_nodes = list(self.graph[i])
-                    logging.info(f"conf nodes of {i}: {conf_nodes}")
+                    #logging.info(f"conf nodes of {i}: {conf_nodes}")
                     u_tot = list()
                     u_tot.append(self.dict_data['profits'][i])
-                    logging.info(f"utility node {i}: {u_tot[0]}")
+                    #logging.info(f"utility node {i}: {u_tot[0]}")
                     for j in conf_nodes:
                         u_tot.append(self.dict_data['profits'][j])
-                    logging.info(f"total utility: {u_tot}")
+                    #logging.info(f"total utility: {u_tot}")
                     max_u = np.max(u_tot)
-                    logging.info(f'Max Utility: {max_u}')
+                    #logging.info(f'Max Utility: {max_u}')
                     # get node with utility equal to max_u
                     conf_nodes.append(i)
-                    logging.info(f"nodes_path: {conf_nodes}")
+                    #logging.info(f"nodes_path: {conf_nodes}")
                     opt_node = [x for x in conf_nodes if self.dict_data['profits'][x] == max_u]
                     delete_nodes = [x for x in conf_nodes if self.dict_data['profits'][x] != max_u]
-                    logging.info(f"optimal node: {opt_node}; deleted_nodes: {delete_nodes}")
-                    self.solution.append(opt_node)
-                    logging.info(f"solution: {self.solution}")
+                    #logging.info(f"optimal node: {opt_node}; deleted_nodes: {delete_nodes}")
                     # delete not optimal nodes
                     self.graph.remove_nodes_from(delete_nodes)
+                    if len(opt_node) > 1:
+                        self.graph.remove_nodes_from(opt_node[1:])
+                    opt_node_ = opt_node[1:]
+                    self.solution.append(opt_node_)
+                    #logging.info(f"solution: {self.solution}")
+
                 except:
                     pass
 
         elapsed = time.time() - start
         self.comp_time = elapsed
-        logging.info(f"=== Optimization done === \n Elapsed time: {elapsed} [ms]")
+        #logging.info(f"=== Optimization done === \n Elapsed time: {elapsed} [ms]")
 
         hash_list = [s for sublist in self.solution for s in sublist]
         self.ob_func = np.sum([self.dict_data['profits'][x] for x in set(hash_list)])
