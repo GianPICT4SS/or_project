@@ -2,7 +2,7 @@
 import time
 import logging
 from pulp import *
-import numpy as np
+
 
 
 class AntennaActivation():
@@ -27,7 +27,7 @@ class AntennaActivation():
         Returns:
             [type] -- [description]
         """
-        logging.info("######### Simple Antenna Activation ###########")
+        #logging.info("######### Simple Antenna Activation ###########")
         items = range(dict_data['n_items'])
 
 
@@ -53,14 +53,14 @@ class AntennaActivation():
                 s = dict_data['R_B'][i]
                 prob += lpSum(x[k] + x[s]) <= 1, f"conflict_{i}"
 
-            logging.info(f'profits: {dict_data["profits"]}')
+            #logging.info(f'profits: {dict_data["profits"]}')
             prob.writeLP("./logs/{}.lp".format(problem_name))
 
             msg_val = 1 if verbose else 0
             start = time.time()
             prob.solve(solver=COIN_CMD())
             end = time.time()
-            logging.info("\t Status: {}".format(LpStatus[prob.status]))
+            #logging.info("\t Status: {}".format(LpStatus[prob.status]))
 
             sol = prob.variables()
             of = value(prob.objective)
@@ -68,13 +68,13 @@ class AntennaActivation():
 
             sol_x = [0] * dict_data['n_items']
             for var in sol:
-                logging.info("{} {}".format(var.name, var.varValue))
+                #logging.info("{} {}".format(var.name, var.varValue))
                 if "X_" in var.name:
                     sol_x[int(var.name.replace("X_", ""))] = abs(var.varValue)
-            logging.info("\n\tof: {}\n\tsol:\n{} \n\ttime:{}".format(
-                of, sol_x, comp_time)
-            )
-            logging.info("#########")
+            #logging.info("\n\tof: {}\n\tsol:\n{} \n\ttime:{}".format(
+            #    of, sol_x, comp_time)
+            #)
+            #logging.info("#########")
             return of, sol_x, comp_time, x, prob
 
         else:
@@ -88,14 +88,14 @@ class AntennaActivation():
                 s = dict_data['B'][i]
                 prob += lpSum(x[k] + x[s]) <= 1, f"conflict_{i}"
 
-            logging.info(f'profits: {dict_data["profits"]}')
+            #logging.info(f'profits: {dict_data["profits"]}')
             prob.writeLP("./logs/{}.lp".format(problem_name))
 
             msg_val = 1 if verbose else 0
             start = time.time()
             prob.solve(solver=COIN_CMD())
             end = time.time()
-            logging.info("\t Status: {}".format(LpStatus[prob.status]))
+            #logging.info("\t Status: {}".format(LpStatus[prob.status]))
 
             sol = prob.variables()
             of = value(prob.objective)
@@ -103,11 +103,11 @@ class AntennaActivation():
 
             sol_x = [0] * dict_data['n_items']
             for var in sol:
-                logging.info("{} {}".format(var.name, var.varValue))
+                #logging.info("{} {}".format(var.name, var.varValue))
                 if "X_" in var.name:
                     sol_x[int(var.name.replace("X_", ""))] = abs(var.varValue)
-                    logging.info("\n\tof: {}\n\tsol:\n{} \n\ttime:{}".format(
-                        of, sol_x, comp_time)
-                    )
-            logging.info("#########")
+                    #logging.info("\n\tof: {}\n\tsol:\n{} \n\ttime:{}".format(
+                    #    of, sol_x, comp_time)
+                    #)
+            #logging.info("#########")
             return of, sol_x, comp_time, x, prob

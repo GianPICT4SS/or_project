@@ -34,9 +34,9 @@ class ConflictGraph():
             # make sure that the two random nodes are different in order to create a conflict edge, without
             # taking a nodes not present in the possible nodes list.
                 edge = (i, j)
-                logging.info(f'Adding edge: {edge}')
+                #logging.info(f'Adding edge: {edge}')
                 self.Graph.add_edge(*edge)
-        logging.info(f' edges: {self.Graph.edges}')
+        #logging.info(f' edges: {self.Graph.edges}')
 
         # Take the conflict edges
         a, b = zip(*self.Graph.edges)
@@ -127,17 +127,18 @@ if __name__ == '__main__':
         plt.ylabel('computational time [s]')
         plt.grid()
         plt.savefig(f'./results/plots/comp_time_{i}.png')
+        plt.close()
 
 
-    ls_heu_sol = []
+    #ls_heu_sol = []
     ls_mwis_sol = []
-    ls_heu_time = []
+   # ls_heu_time = []
     ls_mwis_time = []
-    ls_recu_sol = []
-    ls_recu_time = []
+    #ls_recu_sol = []
+    #ls_recu_time = []
 
 
-    for i in range(50):
+    for i in range(100):
 
         with open("./etc/config.json", 'r') as f:
             sim_setting = json.loads(f.read())
@@ -167,7 +168,7 @@ if __name__ == '__main__':
         #    graph.dict_data,
         #    verbose=True, prob_name='randomAntennaActivation', type=True#)
 
-        print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
+        #print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
         #print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
 
         #recursive heuristic
@@ -205,14 +206,14 @@ if __name__ == '__main__':
         ls_mwis_time.append(mwis_dp.comp_time)
         #ls_recu_time.append(elapsed)
         # printing results of a file
-        with open("./results/exp_general_table.csv", "w") as f:
-            f.write("method; of; time ; sol;\n")
-            f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
+        #with open("./results/exp_general_table.csv", "w") as f:
+        #    f.write("method; of; time ; sol;\n")
+        #    f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
             #f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
             #f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
             #f.write(f"recu_heu: {rec_heu.obj_func}; {elapsed}: {rec_heu.solution}\n")
             #f.write(f"Rrecu_heu: {rec_heu_random.obj_func}; {elapsed_random}: {rec_heu_random.solution}")
-            f.write(f"mwis_dp: {mwis_dp.ob_func}; {mwis_dp.comp_time}; {mwis_dp.solution}")
+        #    f.write(f"mwis_dp: {mwis_dp.ob_func}; {mwis_dp.comp_time}; {mwis_dp.solution}")
 
 
     #plot_of(ls_heu_sol,  i='wgheu')
