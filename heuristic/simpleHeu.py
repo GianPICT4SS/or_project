@@ -136,27 +136,27 @@ class MWIS():
         :return:
         """
 
-        #logging.info('MWIS DP solver started!')
+        logging.info('MWIS DP solver started!')
         start = time.time()
-        self.solution.clear()
+        #self.solution.clear()
         #nVertex = len(self.init_cg)
         #logging.info(f'Number of vertex in the initial CG: {nVertex}')
-
-        for i in list(self.init_cg):
+        #logging.info(f"init_cn: {self.init_cg}")
+        it_cg = list(self.init_cg)
+        for i in it_cg:
             # skip node already in the solution
             #if self.solution.count([i]) != 0:
             #    break
-
+            #logging.info(f" tested node: {i}")
             try:
-                    #logging.info(f'Tested node: {i}')
+
                     conf_nodes = list(self.graph[i])
                     if len(conf_nodes) == 0:
-                        logging.info('Break')
-                        break
+                        continue
                     #logging.info(f"conf nodes of {i}: {conf_nodes}")
                     u_tot = [self.dict_data['profits'][x] for x in conf_nodes]
                     u_tot.append(self.dict_data['profits'][i])
-                    logging.info(f"utility node {i}: {u_tot[-1]}")
+                    #logging.info(f"utility node {i}: {u_tot[-1]}")
                     #logging.info(f"total utility: {u_tot}")
                     max_u = np.max(u_tot)
                     #logging.info(f'Max Utility: {max_u}')
@@ -168,9 +168,10 @@ class MWIS():
                     #         f" \n deleted_nodes: {delete_nodes}")
                     # delete not optimal nodes
                     self.graph.remove_nodes_from(delete_nodes)
-                    self.solution.append(opt_node)
+                    #self.solution.append(opt_node)
                     #logging.info(f"solution: {self.solution}")
             except:
+
                     pass
 
 
@@ -178,7 +179,7 @@ class MWIS():
         self.comp_time = elapsed
         #logging.info(f"=== Optimization done === \n Elapsed time: {elapsed} [ms] \n nodes: {len(self.solution)}")
 
-        self.ob_func = np.sum([self.dict_data['profits'][x] for x in self.solution])
+        self.ob_func = np.sum([self.dict_data['profits'][x] for x in list(self.graph.nodes)])
 
         return self
 
