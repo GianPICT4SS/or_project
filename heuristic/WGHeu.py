@@ -4,6 +4,16 @@ import networkx as nx
 import numpy as np
 #paper --> http://www.ru.is/~mmh/papers/WIS_WG.pdf
 
+class WGHeuNode():
+
+    def __init__(self, node_index, weighted_degree):
+        self.node_index = node_index
+        self.weighted_degree = weighted_degree
+
+    def __lt__(self, other):
+         return self.weighted_degree < other.weighted_degree        
+        
+
 class WGHeu():
 
     def solve(
@@ -23,30 +33,38 @@ class WGHeu():
             [type] -- [description]
         """
         start = time.time()
-        # add vertex weights
-        for u in graph:
-            graph.nodes[u]['weight'] = profits[u]
-
         #compute the adjacency matrix
-        adj_0 = nx.adj_matrix(graph).todense()
-        #pesi cambiati di segno
-        a = -np.array([graph.nodes[u]['weight'] for u in graph.nodes])
-        IS = -np.ones(adj_0.shape[0])
-        while np.any(IS==-1):
-            #fancy indexing https://www.python-course.eu/numpy_masking.php
-            rem_vector = IS == -1
-            adj = adj_0.copy()
-            #reduce the adj matrix only to the remainings nodes
-            adj = adj[rem_vector, :] 
-            adj = adj[:, rem_vector]
+        adj = nx.adj_matrix(graph).todense()
 
-            u = np.argmin(a[rem_vector].dot(adj!=0)/a[rem_vector]) #selects a minimum weighted degree vertex (see the paper for the def)
-            n_IS = -np.ones(adj.shape[0])
-            n_IS[u] = 1 #choose the node
-            neighbors = np.argwhere(adj[u,:]!=0) #find neighbors and excludes them from the solution
+        #-1 not considered, 1 choose, 0 discard
+        IS = -np.ones(adj.shape[0])
+
+        #weights
+        weights = np.array([profits[u] for u in graph])
+        weighted_degrees = weights.dot(adj!=0)/weights
+
+        #support data structure
+        wgnodes = []
+        for i in range(len(graph.nodes)):
+            wgnodes.append(WGHeuNode(i, weighted_degrees[0,i]))
+        #sort the nodes by the weighted degree
+        wgnodes.sort()
+
+        wgnode_index = 0
+
+        while np.any(IS==-1):
+            selected_node = wgnodes[wgnode_index]
+            selected_node_index = selected_node.node_index      
+            if IS[selected_node_index] != -1:
+                wgnode_index = wgnode_index + 1
+                continue                          
+            IS[selected_node_index] = 1 #choose the node
+            neighbors = np.argwhere(adj[selected_node_index,:]!=0) #find neighbors and excludes them from the solution
             if neighbors.shape[0]:
-                n_IS[neighbors] = 0
-            IS[rem_vector] = n_IS #update the indipendent set
+                IS[neighbors] = 0
+            wgnode_index = wgnode_index + 1 #go to the next node in the sorted list 
         end = time.time()
-        of = np.array([graph.nodes[u]['weight'] for u in graph.nodes]).dot(IS)
-        return of, IS.tolist(), end - start,
+        of = weights.dot(IS) #compute the value of the objective function
+        return of, IS.tolist(), end - start,        
+
+

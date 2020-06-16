@@ -39,7 +39,7 @@ class AntennaActivation():
         )
 
         # LpContinuous
-        print(x.items())
+        # print(x.items())
         problem_name = prob_name
 
         if type:
