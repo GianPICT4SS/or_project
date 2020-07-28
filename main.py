@@ -4,8 +4,8 @@ import logging
 import numpy as np
 from simulator.instance import Instance
 from solver.antenna_activation import AntennaActivation
-from heuristic.simpleHeu import SimpleHeu, MWIS
-from heuristic.WGHeu import WGHeu
+from heuristic.simpleHeu import *
+from heuristic.WGHeu import *
 
 import matplotlib.pyplot as plt
 import networkx as net
@@ -78,12 +78,6 @@ class ConflictGraph():
             plt.title('Random Conflict Graphs')
             net.draw(self.randomGraph, with_labels=True, font_weight='bold')
 
-
-
-
-
-
-
 if __name__ == '__main__':
     log_name = "./logs/main.log"
     logging.basicConfig(
@@ -130,50 +124,52 @@ if __name__ == '__main__':
         plt.close()
 
 
-    #ls_heu_sol = []
+    ls_heu_sol = []
     ls_mwis_sol = []
-   # ls_heu_time = []
+    ls_heu_time = []
     ls_mwis_time = []
-    #ls_recu_sol = []
-    #ls_recu_time = []
+    ls_recu_sol = []
+    ls_recu_time = []
+    ls_opt_time = []
 
 
-    for i in range(100):
+    for i in range(5):
 
         with open("./etc/config.json", 'r') as f:
             sim_setting = json.loads(f.read())
 
-        sim_setting['n_items'] = (i+1)*100
+        sim_setting['n_items'] = (i+1)*50
         inst = Instance(
         sim_setting
         )
 
         dict_data = inst.get_data()
         graph = ConflictGraph(dict_data)  # Graph Initialization
-        graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']))  # Simple CG
-        #graph.random_conflict_graph()  # Random CG
+        #graph.simple_conflict_graph(conflict=int(graph.dict_data['n_items']))  # Simple CG
+        graph.random_conflict_graph()  # Random CG
 
         prb = AntennaActivation()  # Solver Initialization
 
         # Deterministic Optimal CG Problem
-        of_exact, sol_exact, comp_time_exact, x, prob = prb.solve(
-        graph.dict_data,
-        verbose=True
-        )
+        #of_exact, sol_exact, comp_time_exact, x, prob = prb.solve(
+        #graph.dict_data,
+        #verbose=True
+        #)
+
+        #ls_opt_time.append(comp_time_exact)
 
 
 
         # Random Optimal CG problem
-        #of_exactR, sol_exactR, comp_time_exactR, xR, probR = prb.solve(
-        #    graph.dict_data,
-        #    verbose=True, prob_name='randomAntennaActivation', type=True#)
+        of_exactR, sol_exactR, comp_time_exactR, xR, probR = prb.solve(
+            graph.dict_data,
+            verbose=True, prob_name='randomAntennaActivation', type=True)
 
         #print(f"of_exact: {of_exact}\n sol_exact: {sol_exact}\n comp_time_exact: {comp_time_exact}")
-        #print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
-
+        print(f"of_exactR: {of_exactR}\n sol_exactR: {sol_exactR}\n comp_time_exactR: {comp_time_exactR}")
         #recursive heuristic
         #rec_heu = SimpleHeu(n=0, graph=graph.Graph, dict_data=graph.dict_data)
-        #rec_heu_random = SimpleHeu(n=0, graph=graph.randomGraph, dict_data=graph.dict_data)
+        rec_heu_random = SimpleHeu(n=0, graph=graph.randomGraph, dict_data=graph.dict_data)
 
         #start = time.time()
         #rec_heu.recursive_cg_solve()
@@ -182,49 +178,49 @@ if __name__ == '__main__':
         #print(f'Recursive Heuristic: solution={rec_heu.solution}, obj_func={rec_heu.obj_func} '
         #   f'\n computational time = {elapsed}')
 
-        #start = time.time()
-        #rec_heu_random.recursive_cg_solve()
-        #elapsed_random = time.time() - start
-        #rec_heu_random.get_oF_sol()
-        #print(f'Random Recursive Heuristic: solution={rec_heu_random.solution}, obj_func={rec_heu_random.obj_func} '
-        #      f'\n computational time = {elapsed}')
+        start = time.time()
+        rec_heu_random.recursive_cg_solve()
+        elapsed_random = time.time() - start
+        rec_heu_random.get_oF_sol()
+        print(f'Random Recursive Heuristic: solution={rec_heu_random.solution}, obj_func={rec_heu_random.obj_func} '
+              f'\n computational time = {elapsed_random}')
 
         #MWIS Dynamic Programming
 
-        mwis_dp = MWIS(graph=graph.Graph, dict_data=graph.dict_data)
+        mwis_dp = MWIS(graph=graph.randomGraph, dict_data=graph.dict_data)
         mwis_dp.mwis_dp()
 
         # WH Heuristicm
-        #wgheu = WGHeu()
-        #of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.Graph, dict_data["profits"]);
+        wgheu = WGHeu()
+        of_heu, sol_heu, comp_time_heu = wgheu.solve(graph.randomGraph, dict_data["profits"]);
 
-        #ls_heu_sol.append(of_heu/of_exact)
-        ls_mwis_sol.append(mwis_dp.ob_func/of_exact)
-        #ls_recu_sol.append(rec_heu.obj_func/of_exact)
+        ls_heu_sol.append(of_heu/of_exactR)
+        ls_mwis_sol.append(mwis_dp.ob_func/of_exactR)
+        ls_recu_sol.append(rec_heu_random.obj_func/of_exactR)
 
-        #ls_heu_time.append(comp_time_heu)
+        ls_heu_time.append(comp_time_heu)
         ls_mwis_time.append(mwis_dp.comp_time)
-        #ls_recu_time.append(elapsed)
+        ls_recu_time.append(elapsed_random)
         # printing results of a file
-        #with open("./results/exp_general_table.csv", "w") as f:
-        #    f.write("method; of; time ; sol;\n")
-        #    f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
+        with open("./results/exp_general_table.csv", "w") as f:
+            f.write("method; of; time ; sol;\n")
+            #f.write(f"exact; {of_exact}; {comp_time_exact}; {sol_exact}\n")
             #f.write(f"exact Random; {of_exactR}; {comp_time_exactR}; {sol_exactR}\n")
-            #f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
+            f.write(f"heu; {of_heu}; {comp_time_heu}; {sol_heu}\n")
             #f.write(f"recu_heu: {rec_heu.obj_func}; {elapsed}: {rec_heu.solution}\n")
             #f.write(f"Rrecu_heu: {rec_heu_random.obj_func}; {elapsed_random}: {rec_heu_random.solution}")
-        #    f.write(f"mwis_dp: {mwis_dp.ob_func}; {mwis_dp.comp_time}; {mwis_dp.solution}")
+            f.write(f"mwis_dp: {mwis_dp.ob_func}; {mwis_dp.comp_time}; {mwis_dp.solution}")
 
 
-    #plot_of(ls_heu_sol,  i='wgheu')
-    plot_of(ls_mwis_sol,  i='mwis')
+    plot_of(ls_heu_sol,  i='(RCG) wgheu')
+    plot_of(ls_mwis_sol,  i='(RCG) mwis')
 
-    plot_compt_time(ls_mwis_time, i='mwis')
-    #plot_compt_time(ls_heu_time, i='wgheu')
+    plot_compt_time(ls_mwis_time, i='(RCG) mwis')
+    plot_compt_time(ls_heu_time, i='(RCG) wgheu')
 
-    #plot_of(ls_recu_sol, i='recursive')
+    plot_of(ls_recu_sol, i='(RCG) recursive')
 
-    #plot_compt_time(ls_recu_time, i='recursive')
+    plot_compt_time(ls_opt_time, i='(RCG) Optimal')
 
 
 
